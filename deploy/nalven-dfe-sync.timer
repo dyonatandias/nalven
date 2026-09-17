@@ -1,0 +1,12 @@
+[Unit]
+Description=Verifica novas NF-e e NFS-e destinadas às filiais NALVEN
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1min
+RandomizedDelaySec=15s
+Persistent=true
+Unit=nalven-dfe-sync.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,20 @@
+CREATE TABLE "tenant_settings" (
+  "id" INTEGER PRIMARY KEY DEFAULT 1 CHECK ("id" = 1),
+  "organization_name" TEXT NOT NULL,
+  "trade_name" TEXT,
+  "locale" TEXT NOT NULL DEFAULT 'pt-BR',
+  "currency" TEXT NOT NULL DEFAULT 'BRL',
+  "timezone" TEXT NOT NULL DEFAULT 'America/Sao_Paulo',
+  "default_payment_method" TEXT NOT NULL DEFAULT 'Pix',
+  "default_customer_name" TEXT NOT NULL DEFAULT 'Consumidor final',
+  "require_customer" BOOLEAN NOT NULL DEFAULT false,
+  "low_stock_alerts" BOOLEAN NOT NULL DEFAULT true,
+  "operational_email" TEXT,
+  "daily_summary" BOOLEAN NOT NULL DEFAULT false,
+  "notify_low_stock" BOOLEAN NOT NULL DEFAULT true,
+  "audit_retention_days" INTEGER NOT NULL DEFAULT 1825,
+  "version" INTEGER NOT NULL DEFAULT 1,
+  "updated_by" TEXT,
+  "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

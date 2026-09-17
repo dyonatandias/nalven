@@ -1,0 +1,10 @@
+-- Compras e cotações
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - purchase_orders
+--   - purchase_order_items
+--   - goods_receipts
+--   - goods_receipt_items
+--   - financial_titles
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

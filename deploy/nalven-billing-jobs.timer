@@ -1,0 +1,11 @@
+[Unit]
+Description=Executa fila Billing NALVEN a cada minuto
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+RandomizedDelaySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

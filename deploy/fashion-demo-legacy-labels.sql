@@ -1,0 +1,10 @@
+BEGIN;
+DO $$ BEGIN IF current_database()<>'nalven_t_demo' THEN RAISE EXCEPTION 'Demo database required'; END IF; END $$;
+UPDATE sales_orders SET sales_channel='ecommerce',origin=CASE WHEN origin='marketplace' THEN 'import' ELSE origin END WHERE sales_channel='marketplace' OR origin='marketplace';
+UPDATE sales_orders o SET customer_name=c.name FROM customers c WHERE o.customer_id=c.id AND o.customer_name IS DISTINCT FROM c.name;
+UPDATE crm_activities a SET subject='Próximo passo: '||o.title FROM crm_opportunities o WHERE a.opportunity_id=o.id AND a.subject ~* 'frota|manutenção|revisão|utilitário|auto|oficina';
+UPDATE financial_accounts SET name='Carteira digital · Vendas online' WHERE name LIKE '%Marketplaces%';
+UPDATE media_assets SET tags=array_replace(tags,'oficina','moda');
+UPDATE automation_notifications SET message=replace(message,'Pastilha de Freio Dianteira','Calça jeans slim') WHERE message LIKE '%Pastilha de Freio Dianteira%';
+UPDATE sales_orders SET customer_name='Boutique Oeste' WHERE customer_name='Frotas Oeste';
+COMMIT;

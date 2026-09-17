@@ -1,0 +1,25 @@
+[Unit]
+Description=Executa jobs runtime de pedidos e integrações NALVEN (bloqueado até bundle homologado)
+After=postgresql.service
+Wants=postgresql.service
+
+[Service]
+Environment=TZ=America/Sao_Paulo
+Type=oneshot
+User=nalven-jobs
+Group=nalven-jobs
+ExecStart=/usr/local/libexec/nalven/process-tenant-jobs.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+LockPersonality=true
+InaccessiblePaths=/home/nalven /etc/nalven/tenants /etc/nalven/tenant-migrators /etc/nalven/tenant-manual-workers /etc/nalven/tenant-manual-callbacks /etc/nalven/tenant-stepup-issuers /etc/nalven/tenant-manual-homologators /etc/nalven/tenant-manual-vault-binders /etc/nalven/tenant-manual-profile-admin-issuers /etc/nalven/tenant-manual-profile-accounting-issuers /etc/nalven/tenant-manual-profile-fiscal-issuers /etc/nalven/tenant-manual-sweepers

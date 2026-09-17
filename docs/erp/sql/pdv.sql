@@ -1,0 +1,14 @@
+-- PDV · Ponto de venda
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - pos_registers / pos_register_accesses / pos_terminals / pos_devices
+--   - cash_register_sessions / cash_register_events / pos_session_payment_counts
+--   - sales / sale_items / pos_sale_payments / pos_sale_events
+--   - pos_product_codes / pos_held_sales / pos_held_sale_items
+--   - pos_returns / pos_return_items
+--   - pos_promotions / pos_coupons / pos_promotion_redemptions
+--   - pos_connectors / pos_print_jobs / pos_sync_operations / pos_approvals
+--   - pos_admin_mutations
+--   - stock_movements / warehouse_ledger_entries
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

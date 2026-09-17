@@ -1,0 +1,2 @@
+# Application deployment only; root-owned entrypoint rejects all arguments.
+nalven ALL=(root) NOPASSWD: /usr/local/libexec/nalven/publish-current.sh ""

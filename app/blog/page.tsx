@@ -1,0 +1,5 @@
+import { pageMetadata, StructuredData } from "@/lib/site/seo";
+import Link from "next/link"; import { controlDb } from "@/db/control";
+export const dynamic = "force-dynamic";
+export const generateMetadata = () => pageMetadata("/blog");
+export default async function Blog(){const posts=await controlDb.blogPost.findMany({where:{status:'published'},orderBy:{publishedAt:'desc'}});return <main className="editorial-page"><StructuredData path="/blog"/><header><Link href="/" className="public-logo">NAL<span>VEN</span></Link><Link href="/glossario">Glossário</Link></header><section className="editorial-hero"><p className="kicker">CONTEÚDO NALVEN</p><h1>Gestão explicada com clareza.</h1><p>Guias e ideias para organizar processos e tomar decisões melhores.</p></section><section className="post-grid">{posts.map(p=><Link href={`/blog/${p.slug}`} key={p.id}><small>{p.publishedAt?.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</small><h2>{p.title}</h2><p>{p.excerpt}</p><span>Ler artigo →</span></Link>)}{!posts.length&&<p>Nenhum artigo publicado ainda.</p>}</section></main>}

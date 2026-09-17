@@ -1,0 +1,23 @@
+-- Produção e kits
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - bills_of_material
+--   - bill_of_material_items
+--   - production_orders
+--   - production_bom_revisions
+--   - production_work_centers
+--   - production_dependencies
+--   - production_material_reservations
+--   - production_reports
+--   - production_consumptions
+--   - production_inspections
+--   - production_events
+--   - production_commands
+--   - production_procurements
+--   - pos_inventory_lots
+--   - pos_inventory_lot_movements
+--   - warehouse_balances
+--   - warehouse_variation_balances
+--   - warehouse_ledger_entries
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

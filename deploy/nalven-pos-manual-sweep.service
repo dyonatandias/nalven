@@ -1,0 +1,35 @@
+[Unit]
+Description=Executa sweep causal T2 de pagamentos manuais NALVEN
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Environment=TZ=America/Sao_Paulo
+Type=oneshot
+User=nalven-pos-manual-sweeper
+Group=nalven-pos-manual-sweeper
+ExecStart=/usr/local/libexec/nalven/process-pos-manual-sweep.sh
+StateDirectory=nalven-pos-manual-sweep
+StateDirectoryMode=0700
+RuntimeDirectory=nalven-pos-manual-sweep
+RuntimeDirectoryMode=0700
+TimeoutStartSec=4min
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+LockPersonality=true
+ReadOnlyPaths=/etc/nalven/tenant-manual-sweepers
+InaccessiblePaths=/etc/nalven/tenants /etc/nalven/tenant-migrators /etc/nalven/tenant-manual-workers /etc/nalven/tenant-manual-callbacks /etc/nalven/tenant-stepup-issuers /etc/nalven/tenant-manual-homologators /etc/nalven/tenant-manual-vault-binders /etc/nalven/tenant-manual-profile-admin-issuers /etc/nalven/tenant-manual-profile-accounting-issuers /etc/nalven/tenant-manual-profile-fiscal-issuers

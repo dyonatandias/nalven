@@ -1,0 +1,25 @@
+[Unit]
+Description=Provisiona bancos tenant pelo executor privilegiado dedicado NALVEN
+After=postgresql.service
+Wants=postgresql.service
+
+[Service]
+Environment=TZ=America/Sao_Paulo
+Type=oneshot
+ExecStart=/usr/local/libexec/nalven/process-tenant-provisioning.sh
+NoNewPrivileges=false
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_SETGID CAP_SETUID
+AmbientCapabilities=
+SystemCallArchitectures=native
+LockPersonality=true
+ReadWritePaths=/etc/nalven/tenants /etc/nalven/tenant-migrators /etc/nalven/tenant-manual-workers /etc/nalven/tenant-manual-callbacks /etc/nalven/tenant-stepup-issuers /etc/nalven/tenant-manual-homologators /etc/nalven/tenant-manual-vault-binders /etc/nalven/tenant-manual-profile-admin-issuers /etc/nalven/tenant-manual-profile-accounting-issuers /etc/nalven/tenant-manual-profile-fiscal-issuers /etc/nalven/tenant-manual-sweepers /run/lock /var/lib/postgresql
+InaccessiblePaths=/home/nalven/nalven/deploy

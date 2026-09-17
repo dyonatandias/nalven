@@ -1,0 +1,7 @@
+-- Contas a pagar/receber
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - financial_titles
+--   - financial_settlements
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

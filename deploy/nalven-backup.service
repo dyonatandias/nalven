@@ -1,0 +1,28 @@
+[Unit]
+Description=Backup dos bancos Nalven
+
+[Service]
+Environment=TZ=America/Sao_Paulo
+Type=oneshot
+ExecStart=/usr/local/sbin/nalven-backup-databases
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+TimeoutStartSec=6h
+UMask=0077
+RuntimeDirectory=nalven-backup
+RuntimeDirectoryMode=0700
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/backups/nalven
+SystemCallArchitectures=native
+LockPersonality=true

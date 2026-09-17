@@ -1,0 +1,33 @@
+[Unit]
+Description=Executa manutenção interna fail-closed do PDV NALVEN
+After=network-online.target nalven.service
+Wants=network-online.target
+Requires=nalven.service
+
+[Service]
+Type=oneshot
+User=nalven-app
+Group=nalven-app
+EnvironmentFile=/etc/nalven/app.env
+Environment=NALVEN_NODE_BINARY=/opt/node-v24.19.0/bin/node
+Environment=TZ=America/Sao_Paulo
+ExecStart=/usr/local/libexec/nalven/process-pos-maintenance.sh
+TimeoutStartSec=5min
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+LockPersonality=true
+InaccessiblePaths=/etc/nalven/tenant-migrators /etc/nalven/tenant-manual-workers /etc/nalven/tenant-manual-callbacks /etc/nalven/tenant-stepup-issuers /etc/nalven/tenant-manual-homologators /etc/nalven/tenant-manual-vault-binders /etc/nalven/tenant-manual-profile-admin-issuers /etc/nalven/tenant-manual-profile-accounting-issuers /etc/nalven/tenant-manual-profile-fiscal-issuers /etc/nalven/tenant-manual-sweepers

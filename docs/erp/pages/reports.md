@@ -1,0 +1,43 @@
+# Central de relatórios
+
+## Identificação
+
+- Rota: `/erp/reports`
+- API implementada: `/api/erp/reports`
+- Grupo: GESTÃO
+- Estado atual: **Parcial — produção gerencial/contábil bloqueada**
+- SQL de referência: [reports.sql](../sql/reports.sql)
+
+## Objetivo
+
+Disponibilizar análises filtráveis, exportáveis e auditáveis.
+
+## Modelo de dados
+
+Os relatórios atuais consultam fontes operacionais. Ainda não existem fatos imutáveis completos nem `report_definitions/report_runs/report_exports` assíncronos no schema atual.
+
+Todas as tabelas pertencem ao banco exclusivo da organização e não possuem `tenant_id`. Referências de usuário usam o identificador do plano de controle apenas como ator/auditoria, sem relação SQL entre bancos.
+
+## API e interface
+
+- As rotas específicas em `/api/erp/reports/*` entregam recortes síncronos do tenant atual.
+- O relatório líquido de vendas exclui cancelamentos/refunds integrais e abate devolução confirmada; bruto, imposto, CMV, margem, competência e subledger completo permanecem pendentes.
+- A interface possui estado vazio, carregamento, erro e feedback sem expor respostas brutas.
+- Valores exibidos vêm exclusivamente da API e do banco da organização.
+
+## Regras e segurança
+
+1. Resolver organização pela sessão, nunca por parâmetro confiado do cliente.
+2. Validar entitlement e permissão de ação antes de abrir transação.
+3. Validar payload no servidor e limitar paginação/exportação.
+4. Registrar auditoria e correlation ID em toda escrita.
+5. Usar outbox e chave idempotente quando houver efeito em outro módulo ou serviço.
+6. Impedir exclusão física de registros com vínculo; usar cancelamento/inativação.
+
+## Critérios de aceite
+
+- Migration aplicada no banco demo com Prisma Migrate.
+- Fluxos e transições exercitados com testes positivos, negativos e de repetição.
+- Permissão de leitura negada para o perfil restrito em cada rota.
+- Interface responsiva, sem JSON bruto e sem números de fallback.
+- Auditoria, correlação e invariantes transacionais verificados.

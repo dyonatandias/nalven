@@ -1,0 +1,4 @@
+export type BillingPlanCode="essencial"|"profissional"|"omnichannel"; export type BillingPaymentMethod="pix"|"boleto"|"cartao";
+export interface BillingEnvelope<T>{success:boolean;data?:T;error?:string;request_id?:string}
+export interface BillingWebhookPayload{event:string;instance_id:string;cliente_id:number;produto_id:number;instalacao_id?:number|null;correlation_id?:string;ocorrido_em:string;[key:string]:unknown}
+export interface CustomerInput{external_id:string;razao_social:string;nome_fantasia?:string;tipo_pessoa:"PF"|"PJ";documento:string;inscricao_estadual?:string;responsavel:{nome:string;email:string;telefone:string;cpf?:string};endereco?:Record<string,string>;plano_codigo:BillingPlanCode;forma_pagamento:BillingPaymentMethod;modulos:string[];dia_vencimento?:number;tenant:{nome:string;url?:string;ambiente:"local"|"sandbox"|"homologacao"|"producao";versao?:string;metadata?:Record<string,unknown>}}

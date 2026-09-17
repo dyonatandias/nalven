@@ -1,0 +1,8 @@
+-- Automações
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - automation_rules
+--   - automation_runs
+--   - automation_notifications
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

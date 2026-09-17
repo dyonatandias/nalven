@@ -1,0 +1,46 @@
+[Unit]
+Description=Nalven Node.js API
+After=network.target postgresql@18-main.service
+Wants=postgresql@18-main.service
+
+[Service]
+Type=simple
+User=nalven-app
+Group=nalven-app
+WorkingDirectory=/srv/nalven/current
+EnvironmentFile=/etc/nalven/app.env
+Environment=HOSTNAME=127.0.0.1
+Environment=TZ=America/Sao_Paulo
+ExecStart=/opt/node-v24.19.0/bin/node /srv/nalven/current/server.js
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=20s
+SuccessExitStatus=143 SIGTERM
+UMask=0027
+LimitCORE=0
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=/etc/nalven/tenant-migrators /etc/nalven/tenant-manual-workers /etc/nalven/tenant-manual-callbacks /etc/nalven/tenant-stepup-issuers /etc/nalven/tenant-manual-homologators /etc/nalven/tenant-manual-vault-binders /etc/nalven/tenant-manual-profile-admin-issuers /etc/nalven/tenant-manual-profile-accounting-issuers /etc/nalven/tenant-manual-profile-fiscal-issuers /etc/nalven/tenant-manual-sweepers
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectKernelLogs=true
+ProtectProc=invisible
+RestrictRealtime=true
+RemoveIPC=true
+TasksMax=512
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+LockPersonality=true
+ReadWritePaths=/var/lib/nalven
+
+[Install]
+WantedBy=multi-user.target

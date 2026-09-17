@@ -1,0 +1,9 @@
+-- Clientes
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - customers
+--   - customer_addresses
+--   - customer_contacts
+--   - customer_credit
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

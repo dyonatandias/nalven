@@ -1,0 +1,167 @@
+{
+  "schema_version": "2.1.0",
+  "generated_at": "2026-08-26T19:28:53Z",
+  "product": {
+    "code": "nalven",
+    "slug": "nalven",
+    "name": "NALVEN",
+    "currency": "BRL",
+    "published": false,
+    "version": "0.9.0",
+    "publication_blocker": "Aguardando credencial no cofre, webhook assinado, cartão e NFS-e homologados"
+  },
+  "billing": {
+    "origin": "https://sistema.agenciaexpresso.com.br",
+    "license_api_base": "https://sistema.agenciaexpresso.com.br/api/v1",
+    "portal": "https://sistema.agenciaexpresso.com.br/cliente",
+    "catalog_endpoint": "/api/public/planos?produto=nalven",
+    "registration": "/cadastro?produto=nalven",
+    "download": "/integracao-billing-nalven.zip",
+    "version": "/integracao-billing-nalven-version.txt"
+  },
+  "pricing_methods": ["pix", "boleto", "cartao"],
+  "production_available_methods": ["pix", "boleto"],
+  "card_availability": "hidden_until_mercado_pago_signed_callback",
+  "plans": [
+    {
+      "code": "essencial",
+      "name": "Essencial",
+      "trial_days": 14,
+      "prices": {
+        "pix": { "monthly": 149, "annual": 1490 },
+        "boleto": { "monthly": 149, "annual": 1490 },
+        "cartao": { "monthly": 169, "annual": 1690 }
+      },
+      "included_modules": ["gestao_base", "catalogo_estoque", "pdv_vendas", "financeiro_base"]
+    },
+    {
+      "code": "profissional",
+      "name": "Profissional",
+      "trial_days": 0,
+      "prices": {
+        "pix": { "monthly": 349, "annual": 3490 },
+        "boleto": { "monthly": 349, "annual": 3490 },
+        "cartao": { "monthly": 369, "annual": 3690 }
+      },
+      "included_modules": [
+        "gestao_base", "catalogo_estoque", "pdv_vendas", "financeiro_base",
+        "vendas_pedidos", "compras_fiscal", "crm", "servicos_recorrencia",
+        "operacao_avancada", "governanca_analytics"
+      ]
+    },
+    {
+      "code": "omnichannel",
+      "name": "Omnichannel",
+      "trial_days": 0,
+      "prices": {
+        "pix": { "monthly": 697, "annual": 6970 },
+        "boleto": { "monthly": 697, "annual": 6970 },
+        "cartao": { "monthly": 717, "annual": 7170 }
+      },
+      "included_modules": [
+        "gestao_base", "catalogo_estoque", "pdv_vendas", "financeiro_base",
+        "vendas_pedidos", "compras_fiscal", "crm", "servicos_recorrencia",
+        "operacao_avancada", "governanca_analytics", "multiempresa_producao",
+        "omnichannel"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "code": "gestao_base",
+      "name": "Gestão e cadastros",
+      "prices": { "pix": 49, "boleto": 49, "cartao": 69 },
+      "resources": ["nalven_dashboard", "nalven_cadastros_basicos", "nalven_relatorios_basicos", "nalven_permissoes_basicas"]
+    },
+    {
+      "code": "catalogo_estoque",
+      "name": "Catálogo e estoque",
+      "prices": { "pix": 59, "boleto": 59, "cartao": 79 },
+      "resources": ["nalven_catalogo", "nalven_estoque_basico"]
+    },
+    {
+      "code": "pdv_vendas",
+      "name": "PDV e vendas",
+      "prices": { "pix": 69, "boleto": 69, "cartao": 89 },
+      "resources": ["nalven_pdv_vendas"]
+    },
+    {
+      "code": "financeiro_base",
+      "name": "Financeiro essencial",
+      "prices": { "pix": 79, "boleto": 79, "cartao": 99 },
+      "resources": ["nalven_financeiro_basico"]
+    },
+    {
+      "code": "vendas_pedidos",
+      "name": "Orçamentos e pedidos",
+      "prices": { "pix": 49, "boleto": 49, "cartao": 69 },
+      "resources": ["nalven_orcamentos_pedidos"]
+    },
+    {
+      "code": "compras_fiscal",
+      "name": "Compras e fiscal",
+      "prices": { "pix": 99, "boleto": 99, "cartao": 119 },
+      "resources": ["nalven_compras_recebimento", "nalven_xml_nfe", "nalven_fiscal_preparado"]
+    },
+    {
+      "code": "crm",
+      "name": "CRM operacional",
+      "prices": { "pix": 69, "boleto": 69, "cartao": 89 },
+      "resources": ["nalven_crm_operacional"]
+    },
+    {
+      "code": "servicos_recorrencia",
+      "name": "Serviços e recorrência",
+      "prices": { "pix": 69, "boleto": 69, "cartao": 89 },
+      "resources": ["nalven_servicos_recorrencia"]
+    },
+    {
+      "code": "operacao_avancada",
+      "name": "Estoque e financeiro avançados",
+      "prices": { "pix": 99, "boleto": 99, "cartao": 119 },
+      "resources": ["nalven_estoque_avancado", "nalven_financeiro_avancado"]
+    },
+    {
+      "code": "governanca_analytics",
+      "name": "Governança e análises",
+      "prices": { "pix": 89, "boleto": 89, "cartao": 109 },
+      "resources": ["nalven_relatorios_avancados", "nalven_permissoes_auditoria"]
+    },
+    {
+      "code": "multiempresa_producao",
+      "name": "Multiempresa e produção",
+      "prices": { "pix": 149, "boleto": 149, "cartao": 169 },
+      "resources": ["nalven_multiempresa", "nalven_producao_kits"]
+    },
+    {
+      "code": "omnichannel",
+      "name": "E-commerce e omnichannel",
+      "prices": { "pix": 199, "boleto": 199, "cartao": 219 },
+      "resources": ["nalven_ecommerce", "nalven_marketplaces", "nalven_sincronizacao_canais", "nalven_logistica_integrada", "nalven_bi_avancado"]
+    }
+  ],
+  "quota_resources": [
+    { "code": "nalven_empresas", "metric": "nalven_empresas_ativas", "unit": "empresas", "periodicity": "instantaneo" },
+    { "code": "nalven_filiais", "metric": "nalven_filiais_ativas", "unit": "filiais", "periodicity": "instantaneo" },
+    { "code": "nalven_usuarios_nomeados", "metric": "nalven_usuarios_ativos", "unit": "usuarios", "periodicity": "instantaneo" },
+    { "code": "nalven_pdvs_simultaneos", "metric": "nalven_pdvs_simultaneos", "unit": "pdvs", "periodicity": "instantaneo" },
+    { "code": "nalven_skus_ativos", "metric": "nalven_skus_ativos", "unit": "skus", "periodicity": "instantaneo" },
+    { "code": "nalven_pedidos_mes", "metric": "nalven_pedidos_mes", "unit": "pedidos", "periodicity": "mensal" },
+    { "code": "nalven_armazenamento_gb", "metric": "nalven_armazenamento_gb", "unit": "GB", "periodicity": "instantaneo" },
+    { "code": "nalven_backup_dias", "metric": "nalven_backup_dias", "unit": "dias", "periodicity": "configuracao" },
+    { "code": "nalven_canais_digitais", "metric": "nalven_canais_ativos", "unit": "canais", "periodicity": "instantaneo" }
+  ],
+  "license_endpoints": {
+    "activate": "POST /licencas/ativar",
+    "validate": "POST /licencas/validar",
+    "entitlements": "GET /licencas/entitlements",
+    "usage": "POST /licencas/uso"
+  },
+  "webhook_events": [
+    "cliente.criado", "cliente.atualizado", "assinatura.atualizada",
+    "assinatura.suspensa", "assinatura.reativada", "assinatura.cancelada",
+    "fatura.paga", "fatura.vencida", "cobranca.criada", "cobranca.emitida",
+    "cobranca.falhou", "pagamento.confirmado",
+    "pagamento.estornado", "nfse.autorizada", "nfse.rejeitada", "nfse.cancelada"
+  ]
+}

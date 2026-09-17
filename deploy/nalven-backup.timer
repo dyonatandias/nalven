@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup diário dos bancos Nalven
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 America/Sao_Paulo
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target

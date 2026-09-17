@@ -1,0 +1,11 @@
+[Unit]
+Description=Verifica provisionamento privilegiado de tenants NALVEN a cada minuto
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=1min
+Persistent=true
+Unit=nalven-tenant-provisioning.service
+
+[Install]
+WantedBy=timers.target

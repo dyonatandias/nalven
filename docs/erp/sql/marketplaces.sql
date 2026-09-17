@@ -1,0 +1,9 @@
+-- Canais e marketplaces
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - marketplace_channels
+--   - marketplace_listings
+--   - marketplace_orders
+--   - sales_orders
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

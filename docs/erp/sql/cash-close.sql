@@ -1,0 +1,8 @@
+-- Fechamento de caixa
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - cash_register_sessions
+--   - cash_register_events
+--   - sales
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

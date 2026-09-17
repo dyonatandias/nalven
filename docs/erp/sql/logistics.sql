@@ -1,0 +1,9 @@
+-- Expedição e logística
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - shipments
+--   - shipment_items
+--   - shipment_events
+--   - warehouse_ledger_entries
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

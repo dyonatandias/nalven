@@ -1,0 +1,11 @@
+[Unit]
+Description=Consolida analytics do site NALVEN a cada hora
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1h
+Persistent=true
+Unit=nalven-analytics.service
+
+[Install]
+WantedBy=timers.target

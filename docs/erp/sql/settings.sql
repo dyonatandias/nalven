@@ -1,0 +1,7 @@
+-- Configurações
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - tenant_settings
+--   - tenant_audit_events
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

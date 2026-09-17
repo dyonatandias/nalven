@@ -1,0 +1,9 @@
+-- Privacidade e LGPD
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - privacy_requests
+--   - legal_bases
+--   - retention_rules
+--   - privacy_incidents
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

@@ -1,0 +1,488 @@
+openapi: 3.1.0
+info:
+  title: Billing Expresso Headless API para NALVEN
+  version: 3.0.1
+  description: API servidor-a-servidor, limitada ao produto da credencial.
+servers:
+  - url: https://sistema.agenciaexpresso.com.br/api/v1/saas
+security:
+  - productBearer: []
+tags:
+  - name: Catalog
+  - name: Customers
+  - name: Subscriptions
+  - name: Portal
+  - name: Billing
+  - name: Contracts
+  - name: Support
+  - name: Licenses
+paths:
+  /catalogo:
+    get:
+      tags: [Catalog]
+      summary: Catálogo, preços, módulos, recursos, cotas e métodos atualmente disponíveis
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /payment-config:
+    get:
+      tags: [Billing]
+      summary: Métodos disponíveis e chave pública do gateway de cartão
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes:
+    get:
+      tags: [Customers]
+      summary: Reconciliação paginada de tenants
+      parameters:
+        - { in: query, name: cursor, schema: { type: string, default: "0" } }
+        - {
+            in: query,
+            name: limit,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
+          }
+        - {
+            in: query,
+            name: updated_since,
+            schema: { type: string, format: date-time },
+          }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+    post:
+      tags: [Customers]
+      summary: Criar ou vincular cliente, assinatura e licença
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CustomerUpsert" }
+      responses:
+        "201": { $ref: "#/components/responses/Success" }
+        "409": { $ref: "#/components/responses/Error" }
+  /clientes/{externalId}:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Customers]
+      summary: Cadastro, tenant e assinatura
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+    patch:
+      tags: [Customers]
+      summary: Atualizar contato e endereço
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object } } }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/assinatura:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Subscriptions]
+      summary: Assinatura comercial vigente
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+    put:
+      tags: [Subscriptions]
+      summary: Substituir plano, método, módulos e vencimento
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubscriptionSet" }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/assinatura/acoes:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    post:
+      tags: [Subscriptions]
+      summary: Suspender, reativar ou cancelar
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [acao]
+              properties:
+                acao: { type: string, enum: [suspender, reativar, cancelar] }
+                motivo: { type: string }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/portal:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Portal]
+      summary: Snapshot agregado do portal NALVEN
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/faturas:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Billing]
+      summary: Listar faturas
+      parameters:
+        - in: query
+          name: status
+          schema:
+            {
+              type: string,
+              enum: [pendente, paga, vencida, cancelada, reembolsada],
+            }
+        - { in: query, name: cursor, schema: { type: string } }
+        - {
+            in: query,
+            name: limit,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
+          }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/faturas/{invoiceId}:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/InvoiceId" }
+    get:
+      tags: [Billing]
+      summary: Detalhar fatura
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/faturas/{invoiceId}/cobrancas:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/InvoiceId" }
+    post:
+      tags: [Billing]
+      summary: Emitir Pix/boleto ou pagar cartão tokenizado
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/InterCharge"
+                - $ref: "#/components/schemas/CardCharge"
+      responses:
+        "200": { $ref: "#/components/responses/Success" }
+        "202": { $ref: "#/components/responses/Success" }
+        "422": { $ref: "#/components/responses/Error" }
+  /clientes/{externalId}/faturas/{invoiceId}/boleto:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/InvoiceId" }
+    get:
+      tags: [Billing]
+      summary: PDF do boleto Banco Inter
+      responses:
+        "200":
+          {
+            description: PDF,
+            content:
+              { application/pdf: { schema: { type: string, format: binary } } },
+          }
+  /clientes/{externalId}/documentos-fiscais:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Billing]
+      summary: Listar NFS-e do produto
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/documentos-fiscais/{token}/download:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/Token" }
+      - {
+          in: query,
+          name: tipo,
+          schema: { type: string, enum: [danfse, xml], default: danfse },
+        }
+    get:
+      tags: [Billing]
+      summary: Download DANFSe ou XML
+      responses: { "200": { description: Arquivo binário } }
+  /clientes/{externalId}/contratos:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Contracts]
+      summary: Listar contratos do produto
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/contratos/{token}:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/Token" }
+    get:
+      tags: [Contracts]
+      summary: Corpo congelado e estado do contrato
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/contratos/{token}/otp:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/Token" }
+    post:
+      tags: [Contracts]
+      summary: Enviar OTP de assinatura
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { type: object } } },
+        }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/contratos/{token}/assinar:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/Token" }
+    post:
+      tags: [Contracts]
+      summary: Assinar contrato com OTP
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [codigo_otp, aceite_termos]
+              properties:
+                codigo_otp: { type: string }
+                aceite_termos: { const: true }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/contratos/{token}/pdf:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/Token" }
+    get:
+      tags: [Contracts]
+      summary: PDF do contrato
+      responses:
+        "200":
+          {
+            description: PDF,
+            content:
+              { application/pdf: { schema: { type: string, format: binary } } },
+          }
+  /clientes/{externalId}/tickets:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Support]
+      summary: Listar chamados
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+    post:
+      tags: [Support]
+      summary: Abrir chamado
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TicketCreate" }
+      responses: { "201": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/tickets/{token}:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/Token" }
+    get:
+      tags: [Support]
+      summary: Detalhar chamado e mensagens
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+    post:
+      tags: [Support]
+      summary: Responder chamado
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mensagem]
+              properties:
+                { mensagem: { type: string, minLength: 1, maxLength: 10000 } }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/tickets/{token}/anexos:
+    parameters:
+      - { $ref: "#/components/parameters/ExternalId" }
+      - { $ref: "#/components/parameters/Token" }
+    post:
+      tags: [Support]
+      summary: Anexar arquivo validado e analisado de até 5 MB
+      description: Aceita PDF, TXT, CSV, JPEG, PNG e WebP. Falha fechado com 503 quando o antivírus estiver indisponível.
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, mensagem_id]
+              properties:
+                file: { type: string, format: binary }
+                mensagem_id: { type: integer }
+      responses: { "201": { $ref: "#/components/responses/Success" } }
+    get:
+      tags: [Support]
+      summary: Baixar anexo
+      parameters:
+        [
+          {
+            in: query,
+            name: anexo_id,
+            required: true,
+            schema: { type: integer },
+          },
+        ]
+      responses: { "200": { description: Arquivo binário } }
+  /clientes/{externalId}/licenca:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    get:
+      tags: [Licenses]
+      summary: Estado e entitlements sem revelar segredo
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+  /clientes/{externalId}/licenca/rotacionar-chave:
+    parameters: [{ $ref: "#/components/parameters/ExternalId" }]
+    post:
+      tags: [Licenses]
+      summary: Rotacionar chave do tenant e exibir nova chave uma vez
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { type: object } } },
+        }
+      responses: { "200": { $ref: "#/components/responses/Success" } }
+components:
+  securitySchemes:
+    productBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: skp_nalven
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema: { type: string, maxLength: 200 }
+    ExternalId:
+      in: path
+      name: externalId
+      required: true
+      schema:
+        {
+          type: string,
+          maxLength: 120,
+          pattern: "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+        }
+    InvoiceId:
+      in: path
+      name: invoiceId
+      required: true
+      schema: { type: integer, minimum: 1 }
+    Token:
+      in: path
+      name: token
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    CustomerUpsert:
+      type: object
+      required:
+        [
+          external_id,
+          razao_social,
+          tipo_pessoa,
+          documento,
+          responsavel,
+          plano_codigo,
+          forma_pagamento,
+          modulos,
+          tenant,
+        ]
+      properties:
+        external_id: { type: string, maxLength: 120 }
+        razao_social: { type: string }
+        nome_fantasia: { type: string }
+        tipo_pessoa: { type: string, enum: [PF, PJ] }
+        documento: { type: string }
+        inscricao_estadual: { type: string }
+        responsavel:
+          type: object
+          required: [nome, email, telefone]
+          properties:
+            nome: { type: string }
+            email: { type: string, format: email }
+            telefone: { type: string }
+            cpf: { type: string }
+        endereco: { type: object }
+        plano_codigo:
+          { type: string, enum: [essencial, profissional, omnichannel] }
+        forma_pagamento: { type: string, enum: [pix, boleto, cartao] }
+        modulos: { type: array, items: { type: string } }
+        dia_vencimento: { type: integer, minimum: 1, maximum: 31 }
+        tenant:
+          type: object
+          required: [nome, ambiente]
+          properties:
+            nome: { type: string }
+            url: { type: string, format: uri }
+            ambiente:
+              { type: string, enum: [local, sandbox, homologacao, producao] }
+            versao: { type: string }
+            metadata: { type: object, additionalProperties: true }
+    SubscriptionSet:
+      type: object
+      properties:
+        plano_codigo: { type: string }
+        forma_pagamento: { type: string, enum: [pix, boleto, cartao] }
+        modulos: { type: array, items: { type: string } }
+        dia_vencimento: { type: integer, minimum: 1, maximum: 31 }
+    InterCharge:
+      type: object
+      required: [metodo]
+      properties:
+        metodo: { type: string, enum: [pix, boleto] }
+        gateway: { type: string, enum: [inter], default: inter }
+        reemitir: { type: boolean, default: false }
+    CardCharge:
+      type: object
+      required: [metodo, card_token, cpf]
+      properties:
+        metodo: { const: cartao }
+        card_token: { type: string }
+        installments: { type: integer, minimum: 1, maximum: 12, default: 1 }
+        cpf: { type: string }
+        payment_method_id: { type: string }
+        issuer_id: { type: integer }
+    TicketCreate:
+      type: object
+      required: [titulo, descricao]
+      properties:
+        titulo: { type: string, minLength: 5, maxLength: 255 }
+        descricao: { type: string, minLength: 10, maxLength: 10000 }
+        categoria:
+          {
+            type: string,
+            enum:
+              [
+                pagamento,
+                tecnico,
+                funcionalidade,
+                integracao,
+                duvida,
+                reclamacao,
+                sugestao,
+                outro,
+              ],
+          }
+        prioridade: { type: string, enum: [baixa, media, alta, urgente] }
+    Envelope:
+      type: object
+      required: [success, request_id]
+      properties:
+        success: { type: boolean }
+        data: {}
+        error: { type: string }
+        request_id: { type: string }
+  responses:
+    Success:
+      description: Operação concluída
+      headers:
+        X-Request-Id: { schema: { type: string } }
+        X-RateLimit-Remaining: { schema: { type: integer } }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Envelope" }
+    Error:
+      description: Erro de validação, autorização ou conflito
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Envelope" }

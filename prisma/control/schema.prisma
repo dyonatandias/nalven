@@ -1,0 +1,695 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/control"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id               String               @id
+  slug             String               @unique
+  name             String
+  document         String               @unique
+  ownerName        String               @map("owner_name")
+  email            String
+  planId           String               @map("plan_id")
+  status           String
+  mrr              Float                @default(0)
+  seatsUsed        Int                  @default(1) @map("seats_used")
+  modules          Json
+  usageScore       Int                  @default(0) @map("usage_score")
+  trialEndsAt      String?              @map("trial_ends_at")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+  plan             Plan                 @relation(fields: [planId], references: [id])
+  database         TenantDatabase?
+  domains          OrganizationDomain[]
+  invoices         Invoice[]
+  tickets          Ticket[]
+  memberships      Membership[]
+  integrations     Integration[]
+  exports          ExportJob[]
+  provisioningJobs ProvisioningJob[]
+  billingAccount   BillingAccount?
+  invites          OrganizationInvite[]
+  customPlans      Plan[]               @relation("CustomPlanOwner")
+
+  @@index([status])
+  @@map("organizations")
+}
+
+model BillingAccount {
+  id                 String       @id @default(cuid())
+  organizationId     String       @unique @map("organization_id")
+  externalId         String       @unique @map("external_id")
+  billingCustomerId  String?      @map("billing_customer_id")
+  planCode           String?      @map("plan_code")
+  paymentMethod      String?      @map("payment_method")
+  modules            Json
+  subscriptionStatus String?      @map("subscription_status")
+  licenseStatus      String?      @map("license_status")
+  entitlementCache   Json?        @map("entitlement_cache")
+  portalCache        Json?        @map("portal_cache")
+  lastSyncedAt       DateTime?    @map("last_synced_at")
+  lastError          String?      @map("last_error")
+  remoteStatus       String       @default("pending") @map("remote_status")
+  lastCheckedAt      DateTime?    @map("last_checked_at")
+  provisionedAt      DateTime?    @map("provisioned_at")
+  licenseSecret      String?      @map("license_secret")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionStatus, lastSyncedAt])
+  @@map("billing_accounts")
+}
+
+model BillingProvisionJob {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  payload        Json
+  status         String    @default("pending")
+  attempts       Int       @default(0)
+  nextAttemptAt  DateTime  @default(now()) @map("next_attempt_at")
+  lastError      String?   @map("last_error")
+  errorCode      String?   @map("error_code")
+  requestId      String?   @map("request_id")
+  lockedAt       DateTime? @map("locked_at")
+  lastAttemptAt  DateTime? @map("last_attempt_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  finishedAt     DateTime? @map("finished_at")
+
+  @@index([status, nextAttemptAt])
+  @@index([organizationId, createdAt])
+  @@map("billing_provision_jobs")
+}
+
+model BillingWebhookEvent {
+  webhookId     String    @id @map("webhook_id")
+  event         String
+  externalId    String?   @map("external_id")
+  correlationId String?   @map("correlation_id")
+  payload       Json
+  receivedAt    DateTime  @default(now()) @map("received_at")
+  processedAt   DateTime? @map("processed_at")
+  error         String?
+
+  @@index([event, receivedAt])
+  @@index([externalId, receivedAt])
+  @@map("billing_webhook_events")
+}
+
+model BillingSyncRun {
+  id         String    @id @default(cuid())
+  kind       String
+  status     String
+  cursor     String?
+  processed  Int       @default(0)
+  requestId  String?   @map("request_id")
+  error      String?
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  @@index([startedAt])
+  @@map("billing_sync_runs")
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  name                String
+  email               String               @unique
+  passwordHash        String               @map("password_hash")
+  role                String               @default("user")
+  status              String               @default("active")
+  emailVerifiedAt     DateTime?            @map("email_verified_at")
+  lastLoginAt         DateTime?            @map("last_login_at")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  sessions            Session[]
+  memberships         Membership[]
+  auditLogs           AuditLog[]
+  exports             ExportJob[]
+  apiKeys             ApiKey[]
+  sentInvites         OrganizationInvite[] @relation("InviteSender")
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([role, status])
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  tokenHash   String    @unique @map("token_hash")
+  expiresAt   DateTime  @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  requestedIp String?   @map("requested_ip")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([expiresAt, usedAt])
+  @@map("password_reset_tokens")
+}
+
+model EmailOutbox {
+  id            String    @id @default(cuid())
+  recipient     String
+  template      String
+  subject       String
+  htmlBody      String    @map("html_body")
+  textBody      String    @map("text_body")
+  status        String    @default("pending")
+  attempts      Int       @default(0)
+  lastError     String?   @map("last_error")
+  sentAt        DateTime? @map("sent_at")
+  nextAttemptAt DateTime  @default(now()) @map("next_attempt_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, nextAttemptAt])
+  @@map("email_outbox")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("sessions")
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  userId         String       @map("user_id")
+  organizationId String       @map("organization_id")
+  role           String       @default("member")
+  status         String       @default("active")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, status])
+  @@map("memberships")
+}
+
+model OrganizationInvite {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  email          String
+  name           String?
+  roleKey        String       @map("role_key")
+  tokenHash      String       @unique @map("token_hash")
+  status         String       @default("pending")
+  expiresAt      DateTime     @map("expires_at")
+  invitedById    String       @map("invited_by_id")
+  acceptedAt     DateTime?    @map("accepted_at")
+  revokedAt      DateTime?    @map("revoked_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy      User         @relation("InviteSender", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, createdAt])
+  @@index([email, status])
+  @@map("organization_invites")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  ipAddress  String?  @map("ip_address")
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
+
+model ApiRateLimit {
+  id          String   @id
+  count       Int      @default(1)
+  windowStart DateTime @map("window_start")
+  expiresAt   DateTime @map("expires_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([expiresAt])
+  @@map("api_rate_limits")
+}
+
+model Integration {
+  id             String        @id @default(cuid())
+  organizationId String?       @map("organization_id")
+  provider       String
+  name           String
+  status         String        @default("disconnected")
+  config         Json?
+  lastSyncAt     DateTime?     @map("last_sync_at")
+  lastError      String?       @map("last_error")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider])
+  @@index([status])
+  @@map("integrations")
+}
+
+model IntegrationOAuthState {
+  state          String    @id
+  organizationId String    @map("organization_id")
+  userId         String    @map("user_id")
+  platform       String
+  credentialId   String?   @map("credential_id")
+  redirectUri    String    @map("redirect_uri")
+  tokenUrl       String    @map("token_url")
+  codeVerifier   String?   @map("code_verifier")
+  expiresAt      DateTime  @map("expires_at")
+  usedAt         DateTime? @map("used_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, expiresAt])
+  @@map("integration_oauth_states")
+}
+
+model BackupRun {
+  id           String    @id @default(cuid())
+  databaseName String    @map("database_name")
+  kind         String
+  status       String
+  fileName     String?   @map("file_name")
+  sizeBytes    BigInt?   @map("size_bytes")
+  error        String?
+  startedAt    DateTime  @default(now()) @map("started_at")
+  finishedAt   DateTime? @map("finished_at")
+
+  @@index([startedAt])
+  @@map("backup_runs")
+}
+
+model ExportJob {
+  id             String        @id @default(cuid())
+  organizationId String?       @map("organization_id")
+  requestedById  String        @map("requested_by_id")
+  type           String
+  format         String
+  status         String        @default("pending")
+  filePath       String?       @map("file_path")
+  error          String?
+  createdAt      DateTime      @default(now()) @map("created_at")
+  completedAt    DateTime?     @map("completed_at")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  requestedBy    User          @relation(fields: [requestedById], references: [id])
+
+  @@index([status, createdAt])
+  @@map("export_jobs")
+}
+
+model ProvisioningJob {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  type           String       @default("create_database")
+  status         String       @default("pending")
+  attempts       Int          @default(0)
+  error          String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+  startedAt      DateTime?    @map("started_at")
+  finishedAt     DateTime?    @map("finished_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@map("provisioning_jobs")
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model VaultSecret {
+  key         String   @id
+  cipherText  String   @map("cipher_text")
+  maskedValue String   @map("masked_value")
+  fingerprint String
+  category    String
+  updatedById String?  @map("updated_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@map("vault_secrets")
+}
+
+model SiteContent {
+  key       String   @id
+  group     String
+  label     String
+  type      String   @default("text")
+  value     Json
+  public    Boolean  @default(true)
+  sortOrder Int      @default(0) @map("sort_order")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([group, sortOrder])
+  @@map("site_contents")
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  name         String
+  fileName     String   @map("file_name")
+  mimeType     String   @map("mime_type")
+  sizeBytes    Int      @map("size_bytes")
+  path         String
+  altText      String   @default("") @map("alt_text")
+  folder       String   @default("geral")
+  uploadedById String   @map("uploaded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([folder, createdAt])
+  @@map("media_assets")
+}
+
+model SeoEntry {
+  path        String   @id
+  title       String
+  description String
+  canonical   String?
+  robots      String   @default("index,follow")
+  imageUrl    String?  @map("image_url")
+  schemaJson  Json?    @map("schema_json")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("seo_entries")
+}
+
+model BlogPost {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  title          String
+  excerpt        String
+  content        String
+  coverUrl       String?   @map("cover_url")
+  status         String    @default("draft")
+  authorName     String    @map("author_name")
+  seoTitle       String?   @map("seo_title")
+  seoDescription String?   @map("seo_description")
+  publishedAt    DateTime? @map("published_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, publishedAt])
+  @@map("blog_posts")
+}
+
+model GlossaryTerm {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  term       String
+  definition String
+  related    Json
+  status     String   @default("draft")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([status, term])
+  @@map("glossary_terms")
+}
+
+model EmailTemplate {
+  id        String   @id
+  name      String
+  subject   String
+  body      String
+  active    Boolean  @default(true)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
+}
+
+model WebhookEndpoint {
+  id         String    @id @default(cuid())
+  name       String
+  url        String
+  events     Json
+  secret     String
+  active     Boolean   @default(true)
+  lastAt     DateTime? @map("last_at")
+  lastStatus Int?      @map("last_status")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@map("webhook_endpoints")
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String
+  prefix     String
+  keyHash    String    @unique @map("key_hash")
+  scopes     Json
+  userId     String    @map("user_id")
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@map("api_keys")
+}
+
+model Announcement {
+  id        String    @id @default(cuid())
+  title     String
+  message   String
+  audience  String    @default("all")
+  level     String    @default("info")
+  active    Boolean   @default(true)
+  startsAt  DateTime? @map("starts_at")
+  endsAt    DateTime? @map("ends_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([active, startsAt])
+  @@map("announcements")
+}
+
+model TenantDatabase {
+  id             String       @id @default(cuid())
+  organizationId String       @unique @map("organization_id")
+  databaseName   String       @unique @map("database_name")
+  configKey      String       @unique @map("config_key")
+  schemaVersion  String       @default("initial") @map("schema_version")
+  status         String       @default("active")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_databases")
+}
+
+model OrganizationDomain {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  hostname       String       @unique
+  primary        Boolean      @default(false)
+  verifiedAt     DateTime?    @map("verified_at")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_domains")
+}
+
+model Plan {
+  id            String         @id
+  name          String
+  monthlyPrice  Float          @map("monthly_price")
+  annualPrice   Float          @map("annual_price")
+  seats         Int
+  modules       Json
+  active        Boolean        @default(true)
+  visibility    String         @default("public")
+  ownerOrganizationId String?  @map("owner_organization_id")
+  ownerOrganization Organization? @relation("CustomPlanOwner", fields: [ownerOrganizationId], references: [id], onDelete: Restrict)
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
+  organizations Organization[]
+
+  @@index([visibility, active])
+  @@index([ownerOrganizationId])
+  @@map("plans")
+}
+
+model Invoice {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  description    String
+  amount         Float
+  status         String
+  dueAt          String       @map("due_at")
+  paidAt         String?      @map("paid_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+  @@map("invoices")
+}
+
+model Ticket {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  subject        String
+  priority       String
+  status         String
+  assignee       String
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([status])
+  @@map("tickets")
+}
+
+model AnalyticsSession {
+  id               String   @id @default(cuid())
+  sessionHash      String   @unique @map("session_hash") @db.VarChar(64)
+  visitorHash      String   @map("visitor_hash") @db.VarChar(64)
+  ipHash           String   @map("ip_hash") @db.VarChar(64)
+  pageType         String   @map("page_type") @db.VarChar(30)
+  pagePath         String   @map("page_path") @db.VarChar(500)
+  deviceType       String   @map("device_type") @db.VarChar(10)
+  sessionStartedAt DateTime @default(now()) @map("session_started_at")
+  lastSeenAt       DateTime @default(now()) @map("last_seen_at")
+
+  @@index([visitorHash])
+  @@index([pageType])
+  @@index([lastSeenAt])
+  @@map("analytics_sessions")
+}
+
+model AnalyticsEvent {
+  id             BigInt   @id @default(autoincrement())
+  sessionHash    String   @map("session_hash") @db.VarChar(64)
+  visitorHash    String   @map("visitor_hash") @db.VarChar(64)
+  ipHash         String   @map("ip_hash") @db.VarChar(64)
+  eventKind      String   @default("page_view") @map("event_kind") @db.VarChar(20)
+  action         String?  @db.VarChar(30)
+  pageType       String   @map("page_type") @db.VarChar(30)
+  pagePath       String   @map("page_path") @db.VarChar(500)
+  referrerSource String   @default("direct") @map("referrer_source") @db.VarChar(120)
+  deviceType     String   @map("device_type") @db.VarChar(10)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([pageType, createdAt])
+  @@index([eventKind, createdAt])
+  @@index([sessionHash])
+  @@index([visitorHash])
+  @@index([ipHash, createdAt])
+  @@map("analytics_events")
+}
+
+model AnalyticsDaily {
+  id                 BigInt   @id @default(autoincrement())
+  statDate           DateTime @map("stat_date") @db.Date
+  pageType           String   @map("page_type") @db.VarChar(30)
+  views              Int      @default(0)
+  uniqueVisitors     Int      @default(0) @map("unique_visitors")
+  sessions           Int      @default(0)
+  desktopViews       Int      @default(0) @map("desktop_views")
+  mobileViews        Int      @default(0) @map("mobile_views")
+  tabletViews        Int      @default(0) @map("tablet_views")
+  avgDurationSeconds Int      @default(0) @map("avg_duration_seconds")
+
+  @@unique([statDate, pageType])
+  @@index([statDate])
+  @@map("analytics_daily")
+}
+
+model AnalyticsPageDaily {
+  id             BigInt   @id @default(autoincrement())
+  statDate       DateTime @map("stat_date") @db.Date
+  pageHash       String   @map("page_hash") @db.Char(64)
+  pagePath       String   @map("page_path") @db.VarChar(500)
+  pageType       String   @map("page_type") @db.VarChar(30)
+  views          Int      @default(0)
+  uniqueVisitors Int      @default(0) @map("unique_visitors")
+
+  @@unique([statDate, pageHash])
+  @@index([statDate, pageType])
+  @@map("analytics_pages_daily")
+}
+
+model AnalyticsReferrerDaily {
+  id             BigInt   @id @default(autoincrement())
+  statDate       DateTime @map("stat_date") @db.Date
+  sourceHash     String   @map("source_hash") @db.Char(64)
+  source         String   @db.VarChar(120)
+  views          Int      @default(0)
+  uniqueVisitors Int      @default(0) @map("unique_visitors")
+
+  @@unique([statDate, sourceHash])
+  @@index([statDate])
+  @@map("analytics_referrers_daily")
+}
+
+model AnalyticsFunnelDaily {
+  id       BigInt   @id @default(autoincrement())
+  statDate DateTime @map("stat_date") @db.Date
+  step     String   @db.VarChar(30)
+  count    Int      @default(0)
+
+  @@unique([statDate, step])
+  @@index([statDate])
+  @@map("analytics_funnel_daily")
+}
+
+model AnalyticsSettings {
+  id                       Int      @id @default(1)
+  enabled                  Boolean  @default(true)
+  trackAdmins              Boolean  @default(false) @map("track_admins")
+  rawRetentionDays         Int      @default(7) @map("raw_retention_days")
+  dailyRetentionDays       Int      @default(365) @map("daily_retention_days")
+  heartbeatIntervalSeconds Int      @default(30) @map("heartbeat_interval_seconds")
+  timezone                 String   @default("America/Sao_Paulo") @db.VarChar(64)
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  @@map("analytics_settings")
+}
+
+model SiteRedirect {
+  source      String   @id
+  destination String
+  status      Int      @default(308)
+  active      Boolean  @default(true)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  @@map("site_redirects")
+}
+
+model RouteEvent {
+  id          String   @id @default(cuid())
+  requestId   String   @map("request_id")
+  path        String
+  destination String   @default("")
+  status      Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  @@unique([requestId, status])
+  @@index([createdAt, status])
+  @@index([path, createdAt])
+  @@map("route_events")
+}

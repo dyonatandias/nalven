@@ -1,0 +1,31 @@
+.tracking-return > div label {
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tracking-return > div label span,
+.tracking-return > div label small {
+  display: block;
+}
+
+.tracking-return > div label small {
+  margin-top: 3px;
+  color: #7b8f97;
+  font-weight: 400;
+}
+
+.tracking-return > div input {
+  width: 120px;
+}
+
+@media (max-width: 520px) {
+  .tracking-return > div label {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tracking-return > div input {
+    width: 100%;
+  }
+}

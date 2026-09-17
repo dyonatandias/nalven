@@ -1,0 +1,26 @@
+{
+  "package": "integracao-billing-nalven",
+  "version": "3.0.3",
+  "contract_version": "3.0.1",
+  "generated_at": "2026-08-26T21:49:54Z",
+  "product_code": "nalven",
+  "billing_api_version": "6.1.2",
+  "download_url": "https://sistema.agenciaexpresso.com.br/integracao-billing-nalven.zip",
+  "version_url": "https://sistema.agenciaexpresso.com.br/integracao-billing-nalven-version.txt",
+  "entrypoints": {
+    "documentation": "docs/integracao-nalven/README.md",
+    "headless_guide": "docs/integracao-nalven/INTEGRACAO-HEADLESS-PARIDADE-TOTAL.md",
+    "activation_status": "docs/integracao-nalven/PENDENCIAS-ATIVACAO-2026-08-26.md",
+    "multi_product_vault": "docs/integracao-nalven/COFRE-MULTIPRODUTO-E-ATIVACAO.md",
+    "quick_start": "integracao/nalven/README.md",
+    "openapi": "integracao/nalven/openapi-headless-v3.yaml",
+    "headless_client": "integracao/nalven/headless-billing-client.example.ts",
+    "machine_catalog": "integracao/nalven/catalogo-v2.json",
+    "license_client": "integracao/nalven/billing-license-client.example.ts",
+    "webhook_handler": "integracao/nalven/webhook-handler.example.ts",
+    "environment": "integracao/nalven/.env.example"
+  },
+  "contains_secrets": false,
+  "publication_requires_homologation": true,
+  "headless_api_base_url": "https://sistema.agenciaexpresso.com.br/api/v1/saas"
+}

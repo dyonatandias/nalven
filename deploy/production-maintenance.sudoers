@@ -1,0 +1,3 @@
+# Install only after reviewing and installing the root-owned maintenance entrypoint.
+# No shell, wildcard arguments, SETENV, arbitrary executable or editable checkout is authorized.
+nalven ALL=(root) NOPASSWD: /usr/local/libexec/nalven/production-maintenance.sh status, /usr/local/libexec/nalven/production-maintenance.sh migrate, /usr/local/libexec/nalven/production-maintenance.sh publish, /usr/local/libexec/nalven/production-maintenance.sh verify

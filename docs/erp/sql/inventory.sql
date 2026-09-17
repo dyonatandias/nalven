@@ -1,0 +1,12 @@
+-- Inventário e depósitos
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - warehouses
+--   - warehouse_balances
+--   - inventory_counts
+--   - inventory_count_items
+--   - stock_transfers
+--   - stock_transfer_items
+--   - warehouse_ledger_entries
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

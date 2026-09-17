@@ -1,0 +1,11 @@
+[Unit]
+Description=Verifica provisionamento de tenants NALVEN a cada minuto
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=1min
+Persistent=true
+Unit=nalven-tenant-jobs.service
+
+[Install]
+WantedBy=timers.target

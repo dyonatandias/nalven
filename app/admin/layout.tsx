@@ -1,0 +1,2 @@
+import { currentUser } from "@/lib/auth"; import { redirect } from "@/lib/site/server-navigation"; import AdminShell from "@/components/admin/admin-shell"; import "./admin.css"; import "./admin-modules.css"; import "./billing.css";
+export default async function Layout({children}:{children:React.ReactNode}){const user=await currentUser();if(!user)return await redirect('/login');if(user.role!=='superadmin')return await redirect('/portal');return <AdminShell user={{name:user.name,email:user.email}}>{children}</AdminShell>}

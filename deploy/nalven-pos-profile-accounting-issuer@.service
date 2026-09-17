@@ -1,0 +1,32 @@
+[Unit]
+Description=NALVEN manual profile accounting assertion issuer for tenant %i
+After=network-online.target postgresql.service
+Wants=network-online.target
+ConditionFileIsExecutable=/usr/local/bin/nalven-pos-profile-accounting-issuer
+
+[Service]
+Type=simple
+User=nalven-pos-profile-accounting
+Group=nalven-pos-profile-accounting
+EnvironmentFile=/etc/nalven/tenant-manual-profile-accounting-issuers/%i.env
+Environment=TZ=America/Sao_Paulo
+ExecStart=/usr/local/bin/nalven-pos-profile-accounting-issuer --tenant %i
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+UMask=0077
+InaccessiblePaths=/etc/nalven/tenants /etc/nalven/tenant-migrators /etc/nalven/tenant-manual-workers /etc/nalven/tenant-manual-callbacks /etc/nalven/tenant-stepup-issuers /etc/nalven/tenant-manual-homologators /etc/nalven/tenant-manual-vault-binders /etc/nalven/tenant-manual-profile-admin-issuers /etc/nalven/tenant-manual-profile-fiscal-issuers /etc/nalven/tenant-manual-sweepers
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

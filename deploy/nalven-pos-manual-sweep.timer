@@ -1,0 +1,13 @@
+[Unit]
+Description=Agenda sweep causal T2 de pagamentos manuais NALVEN
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=5s
+RandomizedDelaySec=10s
+Persistent=true
+Unit=nalven-pos-manual-sweep.service
+
+[Install]
+WantedBy=timers.target

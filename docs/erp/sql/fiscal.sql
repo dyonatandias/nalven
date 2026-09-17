@@ -1,0 +1,9 @@
+-- Central fiscal
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - fiscal_documents
+--   - fiscal_events
+--   - fiscal_certificates
+--   - branch_settings
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

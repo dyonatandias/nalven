@@ -1,0 +1,15 @@
+[Unit]
+Description=NALVEN backup root-only de uploads, segredos e configuração
+
+[Service]
+Environment=TZ=America/Sao_Paulo
+Type=oneshot
+ExecStart=/usr/local/libexec/nalven/backup-recovery-files.sh
+UMask=0077
+Nice=10
+TimeoutStartSec=2h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/backups/nalven-recovery

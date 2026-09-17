@@ -1,0 +1,9 @@
+-- Conciliação bancária
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - bank_statement_imports
+--   - bank_transactions
+--   - financial_settlements
+--   - account_entries
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

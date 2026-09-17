@@ -1,0 +1,32 @@
+[Unit]
+Description=NALVEN billing — agendador isolado
+After=nalven.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=nalven-jobs
+Group=nalven-jobs
+EnvironmentFile=/etc/nalven/internal-jobs.env
+Environment=TZ=America/Sao_Paulo
+ExecStart=/opt/node-v24.19.0/bin/node /usr/local/libexec/nalven/process-internal-job.mjs billing
+TimeoutStartSec=25min
+UMask=0077
+LimitCORE=0
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+LockPersonality=true
+InaccessiblePaths=/etc/nalven/app.env /etc/nalven/tenants /etc/nalven/tenant-migrators

@@ -1,0 +1,35 @@
+import { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
+import AdminShell from "../../components/admin/admin-shell";
+import ModuleView from "../../app/admin/[module]/module-view";
+import ManagementClient from "../../app/admin/gestao/management-client";
+import BillingManager from "../../components/admin/billing-manager";
+import EmailPage from "../../app/admin/email/page";
+import AuditManager from "../../components/admin/audit-manager";
+import OrganizationBilling from "../../components/admin/organization-billing";
+import PlanManager from "../../components/admin/plan-manager";
+import { UserAccessCenter } from "../../components/erp/user-access-center";
+import PlatformSettings from "../../components/admin/platform-settings";
+import WebhookOverview from "../../components/admin/webhook-overview";
+import CommunicationManager from "../../components/admin/communication-manager";
+import OrganizationPlan from "../../components/admin/organization-plan";
+import OrganizationFiscal from "../../components/admin/organization-fiscal";
+import OrganizationProfile from "../../components/admin/organization-profile";
+import SiteManager from "../../components/admin/site-manager";
+import LicenseManager from "../../components/admin/license-manager";
+import PlatformUsers from "../../components/admin/platform-users";
+import EditorialManager from "../../components/admin/editorial-manager";
+import AnalyticsDashboard from "../../app/admin/analytics/analytics-dashboard";
+import NavigationDashboard from "../../app/admin/navegacao/navigation-dashboard";
+import ProfilePage from "../../app/admin/perfil/page";
+import "../../app/globals.css";
+import "../../app/admin/admin.css";
+import "../../app/admin/admin-modules.css";
+function App(){
+  const [path,setPath]=useState(location.pathname);
+  useEffect(()=>{const update=()=>setPath(location.pathname);window.addEventListener("portal-test-navigation",update);return ()=>window.removeEventListener("portal-test-navigation",update);},[]);
+  const moduleName=path.split("/")[2]||"organizacoes";
+  const content=moduleName==="organizacoes"&&location.search.includes("billing-test")?<OrganizationBilling organizationId={path.split("/")[3]}/>:moduleName==="organizacoes"&&location.search.includes("audit-test")?<AuditManager organizationId={path.split("/")[3]}/>:moduleName==="configuracoes"?<PlatformSettings/>:moduleName==="webhooks"?<WebhookOverview/>:moduleName==="modelos-email"?<CommunicationManager section="templates"/>:moduleName==="comunicados"?<CommunicationManager section="announcements"/>:moduleName==="organizacoes"&&location.search.includes("users-test")?<UserAccessCenter organizationId={path.split("/")[3]}/>:moduleName==="organizacoes"&&location.search.includes("plan-test")?<OrganizationPlan organizationId={path.split("/")[3]}/>:moduleName==="organizacoes"&&path.split("/")[3]?<><OrganizationProfile organization={{id:path.split("/")[3],name:"Cliente A",ownerName:"Responsável",email:"contact@example.test",document:"Documento de teste",updatedAt:"2026-09-09T00:00:00.000Z"}}/><OrganizationFiscal organizationId={path.split("/")[3]}/></>:moduleName==="site"?<SiteManager/>:moduleName==="licencas"?<LicenseManager/>:moduleName==="planos"?<PlanManager/>:moduleName==="email"?<EmailPage/>:moduleName==="auditoria"?<AuditManager/>:moduleName==="usuarios"?<PlatformUsers/>:moduleName==="gestao"?<ManagementClient/>:moduleName==="integracoes"?<BillingManager/>:["seo","blog","glossario"].includes(moduleName)?<EditorialManager key={moduleName} resource={moduleName as "seo"|"blog"|"glossario"}/>:<ModuleView module={moduleName}/>;
+  return <AdminShell user={{name:"Administrador de teste",email:"admin@example.invalid"}}>{moduleName==="analytics"?<AnalyticsDashboard/>:moduleName==="navegacao"?<NavigationDashboard/>:moduleName==="perfil"?<ProfilePage/>:content}</AdminShell>;
+}
+createRoot(document.getElementById("app")!).render(<App/>);

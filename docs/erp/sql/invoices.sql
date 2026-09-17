@@ -1,0 +1,10 @@
+-- Entrada por NF-e
+-- Mapa documental. NÃO aplicar este arquivo no banco.
+-- Fontes executáveis: prisma/tenant/schema.prisma e prisma/tenant/migrations/.
+-- Tabelas usadas por este módulo:
+--   - purchase_invoices
+--   - purchase_invoice_items
+--   - warehouse_balances
+--   - warehouse_ledger_entries
+--   - financial_titles
+-- O banco é exclusivo por organização; não existe coluna tenant_id.

@@ -1,0 +1,10 @@
+[Unit]
+Description=Agenda backup local de recuperação NALVEN
+
+[Timer]
+OnCalendar=*-*-* 03:45:00 America/Sao_Paulo
+Persistent=true
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target
