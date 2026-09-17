@@ -1,9 +1,7 @@
-type AssignablePlan = { active: boolean; visibility: string; ownerOrganizationId: string | null };
+type AssignablePlan = { active: boolean; code: string | null };
 
-export const publicPlanWhere = { active: true, visibility: "public", ownerOrganizationId: null } as const;
+export const publicPlanWhere = { active: true, code: { not: null } } as const;
 
-export function canAssignPlan(plan: AssignablePlan | null, organizationId?: string) {
-  if (!plan?.active) return false;
-  if (plan.visibility === "public") return plan.ownerOrganizationId === null;
-  return plan.visibility === "private" && !!organizationId && plan.ownerOrganizationId === organizationId;
+export function canAssignPlan(plan: AssignablePlan | null) {
+  return !!plan?.active && plan.code !== null;
 }

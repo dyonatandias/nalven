@@ -34,7 +34,7 @@ test("fronteiras públicas de autenticação preservam validação, privacidade 
           create: async ({ data }) => { if(state.capacityFull)throw new Error('NALVEN_PLAN_CAPACITY');const member = { id: "new-membership", ...data }; state.members.push(member); state.events.push("membership.create"); return member; },
         },
         organization: { create: async ({ data }) => { state.organizations.push(data); return data; } },
-        plan: { findUnique: async () => ({ id: "basic", active: true, visibility: "public", ownerOrganizationId: null, modules: [] }) },
+        plan: { findUnique: async () => ({ id: "basic", code: "basic", active: true, modules: [] }) },
         provisioningJob: { create: async () => ({}) }, billingAccount: { create: async () => ({}) }, billingProvisionJob: { create: async () => ({}) },
         organizationInvite: {
           findUnique: async () => state.invite,
@@ -75,7 +75,7 @@ test("fronteiras públicas de autenticação preservam validação, privacidade 
     "@/lib/auth-recovery": `import { createHash } from "node:crypto"; import { state } from "test:auth-state";
       export const createPasswordReset = async () => { state.resetQueued++; };
       export const resetTokenHash = token => createHash("sha256").update(token).digest("hex");`,
-    "@/lib/site/signup": `export const signupConfiguration = async () => ({ paymentMethods: ["pix"], billingPlanCodes: { basic: "basic" }, dueDay: 10, trialDays: 7, origin: "https://auth.example.test" });`,
+    "@/lib/site/signup": `export const signupConfiguration = async () => ({ paymentMethods: ["pix"], dueDay: 10, trialDays: 7, origin: "https://auth.example.test" });`,
     "@/lib/billing/client": `export const billingSettings = async () => ({ appVersion: "test" });`,
     "@/lib/analytics/service": `export const incrementFunnelStep = async () => {};`,
   };

@@ -5,7 +5,7 @@ async function main(){
  const domain=(setting.value as {domain:string}).domain;
  if(!/^[a-z0-9.-]+$/.test(domain))throw new Error("Domínio inválido.");
  const origin=`https://${domain}`;
- await controlDb.systemSetting.upsert({where:{key:"signup"},update:{},create:{key:"signup",value:{billingPlanCodes:{essential:"essencial",management:"profissional",scale:"omnichannel"},paymentMethods:["pix","boleto"],dueDay:10}}});
+ await controlDb.systemSetting.upsert({where:{key:"signup"},update:{},create:{key:"signup",value:{paymentMethods:["pix","boleto"],dueDay:10}}});
  const entries=[{path:"/",title:"NALVEN — Gestão empresarial conectada",description:"ERP modular para vendas, estoque, financeiro, fiscal e operação."},{path:"/blog",title:"Blog de gestão empresarial | NALVEN",description:"Guias sobre gestão integrada, vendas, estoque, finanças e processos empresariais."},{path:"/glossario",title:"Glossário de gestão empresarial | NALVEN",description:"Definições dos termos de ERP, vendas, estoque e gestão empresarial, com páginas próprias para cada conceito."}];
  for(const entry of entries)await controlDb.seoEntry.upsert({where:{path:entry.path},update:{},create:{...entry,canonical:`${origin}${entry.path}`,robots:"index,follow"}});
  const posts=await controlDb.blogPost.findMany({where:{status:"published"}});

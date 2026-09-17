@@ -519,15 +519,24 @@ model OrganizationDomain {
 
 model Plan {
   id            String         @id
+  /// Billing's stable plano_codigo (essencial|profissional|omnichannel). Null until synced or for legacy/unreconciled plans.
+  code          String?        @unique @map("billing_code")
   name          String
   monthlyPrice  Float          @map("monthly_price")
+  cardMonthlyPrice Float?      @map("card_monthly_price")
   annualPrice   Float          @map("annual_price")
   seats         Int
+  /// Derived internal RBAC grant array (menu:/resource.read/resource.write), computed from billingModules by lib/billing/module-map.ts. Never admin-authored.
   modules       Json
+  /// Raw Billing module codes included in the plan (gestao_base, pdv_vendas, ...), for display only.
+  billingModules Json?         @map("billing_modules")
   active        Boolean        @default(true)
   visibility    String         @default("public")
   ownerOrganizationId String?  @map("owner_organization_id")
   ownerOrganization Organization? @relation("CustomPlanOwner", fields: [ownerOrganizationId], references: [id], onDelete: Restrict)
+  lastSyncedAt  DateTime?      @map("last_synced_at")
+  /// Verbatim catalog fragment from the last successful Billing sync, for audit/debugging.
+  raw           Json?
   updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
   organizations Organization[]
 

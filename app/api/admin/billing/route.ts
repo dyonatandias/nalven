@@ -5,6 +5,7 @@ import {billingClient,billingSettings,BillingError,type BillingSettings} from '@
 import {fingerprintSecret,generateWebhookSecret,setVaultSecret,vaultMetadata,VAULT_KEYS} from '@/lib/vault';
 import {processBillingJob,retryBillingProvision,unblockBillingJobs} from '@/lib/billing/provision';
 import {billingAccountFor,reconcileBilling,syncBillingOrganization} from '@/lib/billing/sync';
+import {syncPlanCatalog} from '@/lib/billing/catalog-sync';
 import {verifyPassword} from '@/lib/password';
 import {enforceControlRateLimit,privateJson,readJsonObject} from '@/lib/http-security';
 import { validatePublicHttpsUrl } from '@/lib/integrations/security';
@@ -52,6 +53,7 @@ export async function POST(request:Request){
     else if(action==='subscription'){const account=await billingAccountFor(required(b.organizationId));result=await billingClient.updateSubscription(account.externalId,{plano_codigo:required(b.planCode),forma_pagamento:required(b.paymentMethod),modulos:Array.isArray(b.modules)?b.modules:[],dia_vencimento:Number(b.dueDay||10)},randomUUID());await syncBillingOrganization(account.organizationId)}
     else if(action==='subscription_action'){const account=await billingAccountFor(required(b.organizationId));result=await billingClient.subscriptionAction(account.externalId,{acao:required(b.subscriptionAction),motivo:String(b.reason||'')},randomUUID());await syncBillingOrganization(account.organizationId)}
     else if(action==='reconcile')result=await reconcileBilling();
+    else if(action==='catalog_sync')result=await syncPlanCatalog();
     else throw new Error('Ação inválida.');
     await controlDb.auditLog.create({data:{userId:actor.id,action:`billing.${action}`,entityType:'billing',metadata:{organizationId:b.organizationId||null}}});
     if(result && typeof result === 'object' && 'status' in result && result.status === 'failed' && 'error' in result)return privateJson({error:result.error},{status:'errorCode' in result && result.errorCode === 'HTTP_409'?409:422});

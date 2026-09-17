@@ -11,7 +11,7 @@ async function main() {
   if (existing && (await db.query("SELECT value->>'domain' AS domain FROM system_settings WHERE key='saas'")).rows[0]?.domain !== "localhost") throw new Error("Test-only settings marker is missing.");
   await db.query("BEGIN");
   if (!existing) await db.query(await readFile(`${socket}/control-schema.sql`, "utf8"));
-  for (const [key, value] of Object.entries({ saas: { domain: "localhost", trialDays: 7 }, signup: { billingPlanCodes: {}, paymentMethods: ["pix"], dueDay: 10 } })) await db.query("INSERT INTO system_settings(key,value,updated_at) VALUES ($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()", [key, JSON.stringify(value)]);
+  for (const [key, value] of Object.entries({ saas: { domain: "localhost", trialDays: 7 }, signup: { paymentMethods: ["pix"], dueDay: 10 } })) await db.query("INSERT INTO system_settings(key,value,updated_at) VALUES ($1,$2::jsonb,now()) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=now()", [key, JSON.stringify(value)]);
   for (const path of ["/", "/blog", "/glossario"]) await db.query("INSERT INTO seo_entries(path,title,description,robots,updated_at) VALUES ($1,'NALVEN — teste isolado','Verificação local de produção','noindex,nofollow',now()) ON CONFLICT(path) DO NOTHING", [path]);
   await db.query("COMMIT");
   console.log("Isolated control schema and test-only SEO settings ready.");

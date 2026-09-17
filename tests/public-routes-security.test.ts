@@ -19,7 +19,7 @@ test("rotas públicas mantêm prova de acesso, isolamento, limites e projeção 
         organization:{findFirst:async args=>state.active&&args.where.slug==='demo'?{id:'org-a'}:null},
         mediaAsset:{findUnique:async()=>state.asset},seoEntry:{findMany:async()=>[]},
         blogPost:{count:async()=>state.mediaPublished?1:0},glossaryTerm:{count:async()=>0},
-        plan:{findMany:async args=>{if(!args.select)throw Error('Explicit public plan projection required');if(args.where.visibility!=='public'||args.where.ownerOrganizationId!==null||args.where.active!==true)throw Error('Private plans must not be public');return [{id:'basic',name:'Basic',monthlyPrice:10,annualPrice:100,seats:1,modules:[],active:true}];}},
+        plan:{findMany:async args=>{if(!args.select)throw Error('Explicit public plan projection required');if(args.where.code?.not!==null||args.where.active!==true)throw Error('Plans without a Billing code must not be public');return [{id:'basic',name:'Basic',monthlyPrice:10,annualPrice:100,seats:1,modules:[],active:true}];}},
         siteContent:{findMany:async args=>{if(!args.where.public||!args.select)throw Error('Public content selection required');return[{key:'title',value:'Página pública'}];}},
         announcement:{findMany:async args=>{if(args.where.audience!=='all'||!args.select)throw Error('Public announcement scope required');return[];}}
       };`,
