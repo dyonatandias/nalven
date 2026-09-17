@@ -16,8 +16,13 @@ const FALLBACK_SEATS: Record<string, number> = { essencial: 3, profissional: 8, 
  * keeps serving public pages/signup/admin assignment.
  */
 export async function syncPlanCatalog(): Promise<CatalogSyncResult> {
-  const data = await billingClient.catalog();
-  const rawPlans = Array.isArray((data as Record<string, unknown>).plans) ? (data as { plans: unknown[] }).plans : [];
+  const data = await billingClient.catalog() as Record<string, unknown>;
+  // The real API uses Portuguese field names (confirmed against the live public catalog
+  // endpoint, GET /api/public/planos?produto=nalven, which returns `planos`, not `plans`) —
+  // vendor/.../catalogo-v2.json's `plans` key is a stale/aspirational fixture, not what's live.
+  // Accept both to stay resilient if the authenticated headless endpoint differs slightly.
+  const plansField = data.planos ?? data.plans;
+  const rawPlans = Array.isArray(plansField) ? plansField : [];
   const synced: string[] = [];
   const skipped: string[] = [];
   const now = new Date();
@@ -66,23 +71,30 @@ export async function syncPlanCatalogIfStale(maxAgeMs = SYNC_INTERVAL_MS): Promi
 
 function codeOf(entry: unknown): string {
   const record = entry as Record<string, unknown> | null;
-  return record && typeof record.code === "string" ? record.code : "?";
+  const value = record?.codigo ?? record?.code;
+  return typeof value === "string" ? value : "?";
 }
 
 function parseCatalogPlan(entry: unknown) {
   const record = entry as Record<string, unknown> | null;
   if (!record || typeof record !== "object") return null;
-  const code = typeof record.code === "string" && /^[a-z0-9][a-z0-9_-]{0,49}$/.test(record.code) ? record.code : null;
-  const name = typeof record.name === "string" && record.name.trim() ? record.name.trim() : null;
-  const prices = record.prices as Record<string, unknown> | undefined;
+  const codeValue = record.codigo ?? record.code;
+  const code = typeof codeValue === "string" && /^[a-z0-9][a-z0-9_-]{0,49}$/.test(codeValue) ? codeValue : null;
+  const nameValue = record.nome ?? record.name;
+  const name = typeof nameValue === "string" && nameValue.trim() ? nameValue.trim() : null;
+  const prices = (record.precos ?? record.prices) as Record<string, unknown> | undefined;
   const pix = prices?.pix as Record<string, unknown> | undefined;
   const boleto = prices?.boleto as Record<string, unknown> | undefined;
   const cartao = prices?.cartao as Record<string, unknown> | undefined;
-  const monthlyPrice = positiveNumber(pix?.monthly) ?? positiveNumber(boleto?.monthly);
-  const annualPrice = positiveNumber(pix?.annual) ?? positiveNumber(boleto?.annual);
-  const cardMonthlyPrice = positiveNumber(cartao?.monthly);
-  const includedModules = Array.isArray(record.included_modules) ? record.included_modules.filter((value): value is string => typeof value === "string") : [];
-  const seats = positiveInteger(record.seats) ?? positiveInteger((record.quotas as Record<string, unknown> | undefined)?.nalven_usuarios_nomeados) ?? (code ? FALLBACK_SEATS[code] : undefined);
+  const monthly = (value: Record<string, unknown> | undefined) => positiveNumber(value?.mensal) ?? positiveNumber(value?.monthly);
+  const annual = (value: Record<string, unknown> | undefined) => positiveNumber(value?.anual) ?? positiveNumber(value?.annual);
+  const monthlyPrice = monthly(pix) ?? monthly(boleto) ?? positiveNumber(record.preco_mensal);
+  const annualPrice = annual(pix) ?? annual(boleto) ?? positiveNumber(record.preco_anual);
+  const cardMonthlyPrice = monthly(cartao);
+  const modulesValue = record.modulos_inclusos ?? record.modulos ?? record.included_modules;
+  const includedModules = Array.isArray(modulesValue) ? modulesValue.filter((value): value is string => typeof value === "string") : [];
+  const quotas = (record.cotas ?? record.quotas) as Record<string, unknown> | undefined;
+  const seats = positiveInteger(record.usuarios_nomeados) ?? positiveInteger(record.seats) ?? positiveInteger(quotas?.nalven_usuarios_nomeados) ?? (code ? FALLBACK_SEATS[code] : undefined);
   if (!code || !name || monthlyPrice === undefined || annualPrice === undefined || seats === undefined) return null;
   return { code, name, monthlyPrice, annualPrice, cardMonthlyPrice, seats, includedModules };
 }
