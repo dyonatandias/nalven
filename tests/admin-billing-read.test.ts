@@ -14,6 +14,7 @@ test("financeiro exige superadmin e consulta somente dados de apresentação", a
     "@/lib/billing/sync": "export function billingAccountFor(){}export function reconcileBilling(){}export function syncBillingOrganization(){}",
     "@/lib/password": "export function verifyPassword(){}",
     "@/lib/integrations/security": "export function validatePublicHttpsUrl(){}",
+    "@/lib/billing/catalog-sync": "export async function syncPlanCatalog(){return{synced:[],skipped:[],deactivated:[]};}",
   };
   const bundle = await build({
     stdin: { contents: 'export {GET} from "./app/api/admin/billing/route";export {state} from "test:state";', resolveDir: process.cwd(), loader: "ts" },

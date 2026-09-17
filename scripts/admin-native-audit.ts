@@ -86,18 +86,12 @@ try {
     assert.equal(await db.session.count({where:{userId:"native-member-user"}}),0);
     console.log("PASS real member activation, tenant-failure rollback, session preservation and bulk disable");
   } finally { await tenantCheck.$disconnect(); }
-  const privatePlan={id:"native-exclusive",name:"Plano exclusivo de homologação",monthlyPrice:10,annualPrice:100,seats:1,active:true,visibility:"private",ownerOrganizationId:"org-demo",modules:["@policy:v1","products.read","menu:products"]};
-  assert.equal((await post("/api/admin/plans",privatePlan)).status(),200,"Create exclusive plan");
-  assert.equal((await post("/api/admin/plans",{...privatePlan,id:"native-fourth",visibility:"public",ownerOrganizationId:null})).status(),400,"Reject fourth public plan");
-  const publicResponse=await page.evaluate(async()=>{const response=await fetch("/api/public/plans");return{status:response.status,data:await response.json()};});
-  assert.equal(publicResponse.status,200);
-  const publicPlans=publicResponse.data.plans as Array<{id:string}>;
-  assert.equal(publicPlans.length,3);assert.ok(publicPlans.every(plan=>plan.id!==privatePlan.id),"Private plan never public");
-  const version=(await db.organization.findUniqueOrThrow({where:{id:"org-demo"},select:{updatedAt:true}})).updatedAt.toISOString();
-  assert.equal((await post("/api/admin/organizations/org-demo/plan",{planId:privatePlan.id,updatedAt:version,confirm:true})).status(),200,"Assign exclusive plan");
-  assert.deepEqual((await db.organization.findUniqueOrThrow({where:{id:"org-demo"},select:{modules:true}})).modules,privatePlan.modules);
-  const other=await db.organization.create({data:{id:"native-other",slug:"native-other",name:"Outro cliente sintético",document:"native-other",ownerName:"Teste",email:"other@example.invalid",planId:"native-scale",status:"active",modules:["*"]}});
-  assert.equal((await post("/api/admin/organizations/native-other/plan",{planId:privatePlan.id,updatedAt:other.updatedAt.toISOString(),confirm:true})).status(),409,"Reject another customer's private plan");
+  // Plan authoring/assignment now lives in Billing's catalog (see the "Plan sourced from
+  // Billing" migration); /api/admin/plans no longer accepts POST. Set restrictive modules
+  // directly so the owner-authorization check below still has something to bite on.
+  const restrictedModules=["@policy:v1","products.read","menu:products"];
+  await db.organization.update({where:{id:"org-demo"},data:{modules:restrictedModules}});
+  assert.deepEqual((await db.organization.findUniqueOrThrow({where:{id:"org-demo"},select:{modules:true}})).modules,restrictedModules);
   const owner=await db.user.create({data:{id:"native-owner",name:"Proprietário sintético",email:"owner@example.invalid",passwordHash:await hashPassword(password),role:"user"}});
   await db.membership.create({data:{userId:owner.id,organizationId:"org-demo",role:"owner",status:"active"}});
   const ownerContext=await browser.newContext({baseURL:base});
@@ -113,7 +107,7 @@ try {
     assert.equal(await getStatus("/api/erp?scope=finance"),403,"Owner cannot bypass plan restrictions");
   } finally { await ownerContext.close(); }
   trackPageFailures=true;
-  console.log("PASS real exclusive-plan creation/assignment, three public plans, cross-client rejection and owner authorization");
+  console.log("PASS owner authorization respects restricted plan modules");
   await page.goto("/admin/organizacoes");
   await expect(page.getByRole("cell",{name:"Responsável de homologação",exact:true})).toBeVisible();
   await mkdir("outputs/admin-native",{recursive:true});

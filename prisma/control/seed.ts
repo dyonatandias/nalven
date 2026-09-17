@@ -1,21 +1,25 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../generated/control/client";
 import { hashPassword } from "../../lib/password";
+import { deriveRbacModules } from "../../lib/billing/module-map";
 
 const url = process.env.CONTROL_DATABASE_URL;
 if (!url) throw new Error("CONTROL_DATABASE_URL não foi definida");
 const controlDb = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
 
-const essential = ["dashboard", "pdv", "products", "stock", "sales", "finance", "customers", "reports"];
-const management = [...essential, "accounts", "suppliers", "purchases", "crm", "invoices", "fiscalHub"];
-const scale = ["*"];
+// Dev/test fixture mirroring Billing's real catalog (see vendor/billing-integration/docs/integracao-nalven/catalogo-e-entitlements.md).
+// Local dev has no live Billing credential, so this seeds a representative snapshot instead of running the real sync — run
+// "Sincronizar catálogo" in /admin/planos against a real Billing credential to refresh it for good.
+const essencialModules = ["gestao_base", "catalogo_estoque", "pdv_vendas", "financeiro_base"];
+const profissionalModules = [...essencialModules, "vendas_pedidos", "compras_fiscal", "crm", "servicos_recorrencia", "operacao_avancada", "governanca_analytics"];
+const omnichannelModules = [...profissionalModules, "multiempresa_producao", "omnichannel"];
 const seedCredentialRotationKey = "security.seed-credentials.v1";
 
 async function main() {
   await Promise.all([
-    controlDb.plan.upsert({ where: { id: "essential" }, update: {}, create: { id: "essential", name: "Essencial", monthlyPrice: 149, annualPrice: 1490, seats: 3, modules: essential } }),
-    controlDb.plan.upsert({ where: { id: "management" }, update: {}, create: { id: "management", name: "Gestão", monthlyPrice: 299, annualPrice: 2990, seats: 8, modules: management } }),
-    controlDb.plan.upsert({ where: { id: "scale" }, update: {}, create: { id: "scale", name: "Escala", monthlyPrice: 549, annualPrice: 5490, seats: 25, modules: scale } })
+    controlDb.plan.upsert({ where: { id: "essencial" }, update: {}, create: { id: "essencial", code: "essencial", name: "Essencial", monthlyPrice: 149, cardMonthlyPrice: 169, annualPrice: 1490, seats: 3, billingModules: essencialModules, modules: deriveRbacModules(essencialModules), lastSyncedAt: new Date() } }),
+    controlDb.plan.upsert({ where: { id: "profissional" }, update: {}, create: { id: "profissional", code: "profissional", name: "Profissional", monthlyPrice: 349, cardMonthlyPrice: 369, annualPrice: 3490, seats: 8, billingModules: profissionalModules, modules: deriveRbacModules(profissionalModules), lastSyncedAt: new Date() } }),
+    controlDb.plan.upsert({ where: { id: "omnichannel" }, update: {}, create: { id: "omnichannel", code: "omnichannel", name: "Omnichannel", monthlyPrice: 697, cardMonthlyPrice: 717, annualPrice: 6970, seats: 15, billingModules: omnichannelModules, modules: deriveRbacModules(omnichannelModules), lastSyncedAt: new Date() } }),
   ]);
   const adminEmail = (process.env.SUPERADMIN_EMAIL || "admin@nalven.com.br").toLowerCase();
   const adminPassword = requiredSeedSecret("SUPERADMIN_PASSWORD");
@@ -31,7 +35,7 @@ async function main() {
   const admin = existingAdmin || await controlDb.user.create({ data: { name: "Administrador NALVEN", email: adminEmail, passwordHash: adminPasswordHash, role: "superadmin", emailVerifiedAt: new Date() } });
   await controlDb.organization.upsert({
     where: { id: "org-demo" }, update: {},
-    create: { id: "org-demo", slug: "demo", name: "Auto Mais Peças", document: "98.765.432/0001-98", ownerName: "Dyonatan Dias", email: "dyonatan@automais.com.br", planId: "scale", status: "active", seatsUsed: 7, modules: scale, usageScore: 92 }
+    create: { id: "org-demo", slug: "demo", name: "Auto Mais Peças", document: "98.765.432/0001-98", ownerName: "Dyonatan Dias", email: "dyonatan@automais.com.br", planId: "profissional", status: "active", seatsUsed: 7, modules: deriveRbacModules(profissionalModules), usageScore: 92 }
   });
   await controlDb.tenantDatabase.upsert({
     where: { organizationId: "org-demo" }, update: {},

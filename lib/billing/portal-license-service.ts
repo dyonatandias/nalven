@@ -27,13 +27,11 @@ export async function readPortalLicense(context: PortalLicenseContext, query: UR
   const refresh = query.get("refresh");
   if (query.getAll("refresh").length > 1 || (refresh !== null && refresh !== "0" && refresh !== "1")) throw new HttpSecurityError("Parâmetro de atualização inválido.", 400);
   // Local plan configuration is deliberately never part of the remote cache.
-  const [organization, signup, remote] = await Promise.all([
-    controlDb.organization.findUniqueOrThrow({ where: { id: context.organizationId }, select: { modules: true, plan: { select: { id: true, name: true } } } }),
-    controlDb.systemSetting.findUnique({ where: { key: "signup" }, select: { value: true } }),
+  const [organization, remote] = await Promise.all([
+    controlDb.organization.findUniqueOrThrow({ where: { id: context.organizationId }, select: { modules: true, plan: { select: { id: true, name: true, code: true } } } }),
     loadLicense(context, refresh === "1"),
   ]);
-  const config = object(signup?.value), mapping = object(config.billingPlanCodes), expectedValue = mapping[organization.plan.id];
-  const expectedRemoteCode = typeof expectedValue === "string" && /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,119}$/.test(expectedValue) ? expectedValue.toLowerCase() : null;
+  const expectedRemoteCode = organization.plan.code ? organization.plan.code.toLowerCase() : null;
   const services = planAllows(organization.modules, "service-orders");
   const applicationPlan = { id: organization.plan.id, name: organization.plan.name, expectedRemoteCode, modules: ERP_MODULES.map(module => ({ id: module.id, name: module.id === "products" && !services ? "Produtos" : module.label, enabled: planAllows(organization.modules, module.id) })) };
   const comparison = { plan: expectedRemoteCode && remote.data.license.plan.code ? expectedRemoteCode === remote.data.license.plan.code ? "match" as const : "different" as const : "unknown" as const };
@@ -72,4 +70,3 @@ export function portalLicenseFailure(error: unknown) {
   }
   return authErrorResponse(error);
 }
-function object(value: unknown): Record<string, unknown> { return value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}; }

@@ -24,7 +24,7 @@
 .root .planCard { display: flex; flex-direction: column; gap: 8px; align-items: start; text-align: left; white-space: normal; background: #f8fafc; border: 1px solid var(--plan-border); border-radius: 12px; padding: 18px; color: #192b42; overflow-wrap: anywhere; }
 .planCard strong { font-size: 18px; }
 .planCard span:first-child { color: #526277; font-size: 12px; }
-.root .planCard[aria-pressed=true] { background: #eef3ff; border-color: #315dc9; box-shadow: 0 0 0 1px #315dc9; }
+.root .planCard[aria-pressed=true], .root .planCardHighlight { background: #eef3ff; border-color: #315dc9; box-shadow: 0 0 0 1px #315dc9; }
 .editorHeading { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
 .editorHeading > span { margin-right: auto; color: #526277; }
 .editor { display: grid; grid-template-columns: minmax(0, 1fr) 290px; align-items: start; gap: 24px; }

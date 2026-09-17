@@ -14,13 +14,14 @@ test("configuração e cofre financeiro fazem rollback conjunto e exigem reauten
     "@/lib/integrations/security": `export async function validatePublicHttpsUrl(){}`,
     "@/lib/billing/sync": `export function billingAccountFor(){}export function reconcileBilling(){}export function syncBillingOrganization(){}`,
     "@/lib/billing/provision": `export function processBillingJob(){}export function retryBillingProvision(){}export async function unblockBillingJobs(tx){return tx.billingProvisionJob.updateMany();}`,
+    "@/lib/billing/catalog-sync": `import{state}from'test:state';export async function syncPlanCatalog(){state.catalogSyncCalls=(state.catalogSyncCalls||0)+1;return{synced:['essencial'],skipped:[],deactivated:[]};}`,
     "@/db/control": `import{state}from'test:state';const tx={
       $executeRaw:async()=>0,
       systemSetting:{upsert:async args=>{state.stored.settings=args.update.value;}},
       vaultSecret:{upsert:async args=>{if(state.fail==='vault')throw new Error('vault failed');state.stored.vault=args.update;}},
       billingProvisionJob:{updateMany:async()=>{if(state.fail==='jobs')throw new Error('jobs failed');state.stored.jobs='pending';}},
       auditLog:{create:async args=>{if(state.fail==='audit')throw new Error('audit failed');state.stored.audit.push(args.data);}}
-    };export const controlDb={$transaction:async callback=>{state.transactions++;const before=structuredClone(state.stored);try{return await callback(tx);}catch(error){state.stored=before;throw error;}}};`,
+    };export const controlDb={auditLog:tx.auditLog,$transaction:async callback=>{state.transactions++;const before=structuredClone(state.stored);try{return await callback(tx);}catch(error){state.stored=before;throw error;}}};`,
   };
   const bundle = await build({
     stdin: { contents: 'export {POST} from "./app/api/admin/billing/route";export {state} from "test:state";', resolveDir: process.cwd(), loader: "ts" },
@@ -32,7 +33,7 @@ test("configuração e cofre financeiro fazem rollback conjunto e exigem reauten
   });
   const routeModule = { exports: {} };
   new Function("require", "module", "exports", bundle.outputFiles[0].text)(createRequire(import.meta.url), routeModule, routeModule.exports);
-  const { POST, state } = routeModule.exports as { POST: (request: Request) => Promise<Response>; state: { role: string; fail: string; transactions: number; stored: { settings: unknown; vault: unknown; jobs: string; audit: unknown[] } } };
+  const { POST, state } = routeModule.exports as { POST: (request: Request) => Promise<Response>; state: { role: string; fail: string; transactions: number; catalogSyncCalls?: number; stored: { settings: unknown; vault: unknown; jobs: string; audit: unknown[] } } };
   const send = (body: Record<string, unknown>) => POST(new Request("https://app.example.test/api/admin/billing", { method: "POST", headers: { origin: "https://app.example.test", host: "app.example.test", "content-type": "application/json" }, body: JSON.stringify(body) }));
   const apiKey = "skp_nalven_synthetic_test_key";
   const body = { action: "configuration.save", apiKey, currentPassword: "correct", appVersion: "1.0.0" };
@@ -62,4 +63,11 @@ test("configuração e cofre financeiro fazem rollback conjunto e exigem reauten
   state.fail = ""; state.role = "user";
   assert.equal((await send(body)).status, 403);
   assert.deepEqual(state.stored, saved);
+
+  state.role = "superadmin";
+  const auditBefore = state.stored.audit.length;
+  const syncResponse = await send({ action: "catalog_sync" });
+  assert.equal(syncResponse.status, 200);
+  assert.equal(state.catalogSyncCalls, 1);
+  assert.equal(state.stored.audit.length, auditBefore + 1);
 });

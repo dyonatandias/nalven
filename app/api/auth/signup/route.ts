@@ -40,9 +40,8 @@ export async function POST(request: Request) {
     const planId = typeof body.planId === "string" ? body.planId : "";
     if (!/^[a-z0-9_-]{2,50}$/.test(planId)) return privateJson({ error: "Plano inválido" }, { status: 400 });
     const plan = await controlDb.plan.findUnique({ where: { id: planId } });
-    if (!plan || !canAssignPlan(plan)) return privateJson({ error: "Plano inválido" }, { status: 400 });
-    const planCode=configuration.billingPlanCodes[plan.id];
-    if (!planCode || !/^[a-z0-9_-]{2,100}$/.test(planCode)) return privateJson({error:"Plano sem correspondência no sistema de cobrança."},{status:503});
+    if (!plan || !plan.code || !canAssignPlan(plan)) return privateJson({ error: "Plano inválido" }, { status: 400 });
+    const planCode=plan.code;
     if (body.dueDay !== undefined && typeof body.dueDay !== "string" && typeof body.dueDay !== "number") return privateJson({error:"Dia do vencimento inválido."},{status:400});
     const paymentDueDay=Number(body.dueDay ?? configuration.dueDay);
     if (!Number.isInteger(paymentDueDay) || paymentDueDay<1 || paymentDueDay>28) return privateJson({error:"Dia do vencimento inválido."},{status:400});
